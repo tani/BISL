@@ -1,18 +1,19 @@
 defmodule BISL do
-	@src to_char_list("((_lambda () #{File.read!("lib/core.lsp")}))")
-	
+	@src "((_lambda () #{File.read!("lib/core.lsp")}))"
+
 	def main([]) do
 		initialize
 		repl
 	end
-	
+
   def initialize() do
-    {:ok, pid} = Agent.start_link fn -> [
+    Agent.start_link(fn -> [
       {:TRUE,true},
       {:FALSE,false}
-      ] end
-    Process.register pid, :vt
-    {:ok, pid} = Agent.start_link fn -> [
+      ] end)
+		|> elem(1) |> Process.register(:vt)
+
+    Agent.start_link(fn -> [
       {:_CONS, &_cons/1},
       {:_IF,   &_if/2},
       {:_QUOTE,&_quote/2},
@@ -27,9 +28,10 @@ defmodule BISL do
       {:_ERLANG,&_erlang/2},
       {:_BACKQUOTE,&_backquote/2},
       {:_FUNCTION,&_function/2}
-      ] end
-    Process.register pid, :ft
-    {:ok, pid} = Agent.start_link fn -> [
+      ] end)
+		|> elem(1) |> Process.register(:ft)
+
+    Agent.start_link(fn -> [
       {:_QUOTE, true},
       {:_BACKQUOTE, true},
       {:_DEFUN, true},
@@ -40,11 +42,13 @@ defmodule BISL do
       {:_ERLANG,true},
       {:_IF,true},
       {:_LAMBDA,true}
-    ] end
-    Process.register pid,:macro
+    ] end)
+		|> elem(1) |> Process.register(:macro)
 
-		tkn = elem(:lexer.string(@src),1)
-    _eval(elem(:parser.parse(tkn),1),:vt)
+		@src |> to_char_list
+		     |> :lexer.string |> elem(1)
+		     |> :parser.parse |> elem(1)
+		     |> _eval(:vt)
   end
 
   def sym_get(tb,name),
@@ -56,9 +60,8 @@ defmodule BISL do
   def sym_table_delete(tb),
       do: Agent.stop tb
   def sym_table_copy(tb) do
-    Agent.start_link(fn -> Agent.get(tb, fn x -> x end) end)
-      |> Tuple.to_list
-      |> Enum.at(1)
+		(fn -> Agent.get(tb,fn x -> x end) end)
+		|> Agent.start_link |> elem(1)
   end
 
   def _p([obj]), do: IO.inspect obj
@@ -76,15 +79,19 @@ defmodule BISL do
   def _eval(val,_env), do: val
 
   def _read() do
-    src = to_char_list IO.gets ""
-    tkn = elem(:lexer.string(src),1)
-    elem(:parser.parse(tkn),1)
-  end
+  	IO.gets("")
+		|> to_char_list
+		|> :lexer.string |> elem(1)
+		|> :parser.parse |> elem(1)
+		|> _eval(:vt)
+	end
 
   def _load(file) do
-    src = to_char_list "((_lambda () #{File.read!(file)}))"
-    tkn = elem(:lexer.string(src),1)
-    _eval(elem(:parser.parse(tkn),1),:vt)
+    "((_lambda () #{File.read!(file)}))"
+		 |> to_char_list
+     |> :lexer.string |> elem(1)
+		 |> :parser.parse |> elem(1)
+		 |> _eval(:vt)
   end
 
   def _if([test,then],env) do
@@ -144,9 +151,9 @@ defmodule BISL do
         for {a,v}<-Enum.zip(Enum.take(args,n),Enum.take(vars,n)), do: sym_add env, a, v
         sym_add env, Enum.at(args,n+1), Enum.drop(vars,n)
       else
-        for {a,v}<-Enum.zip(args,vars),do: sym_add env, a, v
+        for {a,v}<-Enum.zip(args,vars), do: sym_add env, a, v
       end
-      ret = Enum.map(Enum.map(body, &(_eval &1,env)),&(_eval &1,env))
+      ret = Enum.map(Enum.map(body, &(_eval &1,env)), &(_eval &1,env))
 #      sym_table_delete env
       List.last ret
       end
@@ -162,7 +169,7 @@ defmodule BISL do
 
   def repl() do
     IO.write "? "
-    _eval(_read, :vt) |> IO.inspect
+		_read |> _eval(:vt) |> IO.inspect
     repl
   end
 end
