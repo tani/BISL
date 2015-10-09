@@ -1,0 +1,41 @@
+(_defmacro defmacro (name args &rest body)
+  `(_defmacro ,name ,args ,@body))
+(defmacro defun (name args &rest body)
+  `(_defun ,name ,args ,@body))
+(defmacro if (test &rest body)
+  `(_if ,test ,@body))
+(defmacro lambda (args &rest body) `(_lambda ,args ,@body))
+(defun apply  (f &rest args) (_erlang erlang apply f args))
+(defun funcall (f &rest args) (apply f args))
+(defun atom (obj) (if (_erlang erlang is_list obj) false true))
+
+;; List
+(defun car (list) (_erlang erlang hd list))
+(defun cdr (list) (_erlang erlang tl list))
+(defun cons (val list) (_cons val list))
+(defun nullp (list) (if (_erlang erlang == list '()) true false))
+(defun map (fun ls)
+  (if (nullp ls) '()
+      (cons (funcall fun (car ls)) (map fun (cdr ls)))))
+(defun fold (fun init ls)
+  (if (nullp ls) init
+      (fold fun (funcall fun init (car ls)) (cdr ls))))
+
+;; Boolean
+(defun not (bool) (if bool false true))
+(_defmacro let (args body)
+  `((_lambda ,(map #'car args) ,body)
+    ,@(map (lambda (ls) (car (cdr ls))) args)))
+
+;; Math
+(defun eq (&rest val)
+  (fold (lambda (a b) (if (_erlang erlang == a b) a false))
+    (car val) (cdr val)))
+(defun + (&rest val)
+  (fold (lambda (a b) (_erlang erlang + a b)) (car val) (cdr val)))
+(defun - (&rest val)
+  (fold (lambda (a b) (_erlang erlang - a b)) (car val) (cdr val)))
+(defun * (&rest val)
+  (fold (lambda (a b) (_erlang erlang * a b)) (car val) (cdr val)))
+(defun / (&rest val)
+  (fold (lambda (a b) (_erlang erlang / a b)) (car val) (cdr val)))
