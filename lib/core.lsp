@@ -23,8 +23,8 @@
 
 ;; Boolean
 (defun not (bool) (if bool false true))
-(_defmacro let (args body)
-  `((_lambda ,(map #'car args) ,body)
+(defmacro let (args body)
+  `((lambda ,(map #'car args) ,body)
     ,@(map (lambda (ls) (car (cdr ls))) args)))
 
 ;; Math
