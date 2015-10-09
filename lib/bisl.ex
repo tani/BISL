@@ -1,4 +1,11 @@
-defmodule Lisp do
+defmodule BISL do
+	@src to_char_list("((_lambda () #{File.read!("lib/core.lsp")}))")
+	
+	def main([]) do
+		initialize
+		repl
+	end
+	
   def initialize() do
     {:ok, pid} = Agent.start_link fn -> [
       {:TRUE,true},
@@ -35,6 +42,9 @@ defmodule Lisp do
       {:_LAMBDA,true}
     ] end
     Process.register pid,:macro
+
+		tkn = elem(:lexer.string(@src),1)
+    _eval(elem(:parser.parse(tkn),1),:vt)
   end
 
   def sym_get(tb,name),
@@ -156,7 +166,3 @@ defmodule Lisp do
     repl
   end
 end
-
-Lisp.initialize
-Lisp._load "core.lsp"
-Lisp.repl
