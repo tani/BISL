@@ -1,17 +1,17 @@
 defmodule BISL do
-	@src "((_lambda () #{File.read!("lib/core.lsp")}))"
+  @src "((_lambda () #{File.read!("lib/core.lsp")}))"
 
-	def main([]) do
-		initialize
-		repl
-	end
+  def main([]) do
+    initialize
+    repl
+  end
 
   def initialize() do
     Agent.start_link(fn -> [
       {:TRUE,true},
       {:FALSE,false}
       ] end)
-		|> elem(1) |> Process.register(:vt)
+    |> elem(1) |> Process.register(:vt)
 
     Agent.start_link(fn -> [
       {:_CONS, &_cons/1},
@@ -29,7 +29,7 @@ defmodule BISL do
       {:_BACKQUOTE,&_backquote/2},
       {:_FUNCTION,&_function/2}
       ] end)
-		|> elem(1) |> Process.register(:ft)
+    |> elem(1) |> Process.register(:ft)
 
     Agent.start_link(fn -> [
       {:_QUOTE, true},
@@ -43,12 +43,12 @@ defmodule BISL do
       {:_IF,true},
       {:_LAMBDA,true}
     ] end)
-		|> elem(1) |> Process.register(:macro)
+    |> elem(1) |> Process.register(:macro)
 
-		@src |> to_char_list
-		     |> :lexer.string |> elem(1)
-		     |> :parser.parse |> elem(1)
-		     |> _eval(:vt)
+    @src |> to_char_list
+         |> :lexer.string |> elem(1)
+         |> :parser.parse |> elem(1)
+         |> _eval(:vt)
   end
 
   def sym_get(tb,name),
@@ -60,8 +60,8 @@ defmodule BISL do
   def sym_table_delete(tb),
       do: Agent.stop tb
   def sym_table_copy(tb) do
-		(fn -> Agent.get(tb,fn x -> x end) end)
-		|> Agent.start_link |> elem(1)
+    (fn -> Agent.get(tb,fn x -> x end) end)
+    |> Agent.start_link |> elem(1)
   end
 
   def _p([obj]), do: IO.inspect obj
@@ -79,19 +79,19 @@ defmodule BISL do
   def _eval(val,_env), do: val
 
   def _read() do
-  	IO.gets("")
-		|> to_char_list
-		|> :lexer.string |> elem(1)
-		|> :parser.parse |> elem(1)
-		|> _eval(:vt)
-	end
+    IO.gets("")
+    |> to_char_list
+    |> :lexer.string |> elem(1)
+    |> :parser.parse |> elem(1)
+    |> _eval(:vt)
+  end
 
   def _load(file) do
     "((_lambda () #{File.read!(file)}))"
-		 |> to_char_list
-     |> :lexer.string |> elem(1)
-		 |> :parser.parse |> elem(1)
-		 |> _eval(:vt)
+    |> to_char_list
+    |> :lexer.string |> elem(1)
+		|> :parser.parse |> elem(1)
+    |> _eval(:vt)
   end
 
   def _if([test,then],env) do
@@ -169,7 +169,7 @@ defmodule BISL do
 
   def repl() do
     IO.write "? "
-		_read |> _eval(:vt) |> IO.inspect
+    _read |> _eval(:vt) |> IO.inspect
     repl
   end
 end
