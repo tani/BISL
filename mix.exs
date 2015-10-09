@@ -5,7 +5,7 @@ defmodule BISL.Mixfile do
     [app: :bisl,
      version: "0.0.1",
      elixir: "~> 1.1",
-		 escript: [main_module: BISL],
+	   escript: [main_module: BISL],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod]
   end
