@@ -90,7 +90,7 @@ defmodule BISL do
     "((_lambda () #{File.read!(file)}))"
     |> to_char_list
     |> :lexer.string |> elem(1)
-		|> :parser.parse |> elem(1)
+    |> :parser.parse |> elem(1)
     |> _eval(:vt)
   end
 
